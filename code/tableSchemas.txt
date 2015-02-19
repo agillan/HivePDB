@@ -1,0 +1,115 @@
+hive> describe formatted pdb_xml_load;                             
+OK
+# col_name            	data_type           	comment             
+	 	 
+pdbid               	string              	from deserializer   
+record              	array<string>       	from deserializer   
+	 	 
+# Detailed Table Information	 	 
+Database:           	pdb_sample          	 
+Owner:              	zslf023             	 
+CreateTime:         	Sun Jul 06 14:57:09 BST 2014	 
+LastAccessTime:     	UNKNOWN             	 
+Protect Mode:       	None                	 
+Retention:          	0                   	 
+Location:           	hdfs://bigdata:8020/user/zslf023/pdbsample/mz	 
+Table Type:         	EXTERNAL_TABLE      	 
+Table Parameters:	 	 
+	EXTERNAL            	TRUE                
+	transient_lastDdlTime	1404655029          
+	xmlinput.end        	</PDBx:datablock>   
+	xmlinput.start      	<PDBx:datablock     
+	 	 
+# Storage Information	 	 
+SerDe Library:      	com.ibm.spss.hive.serde2.xml.XmlSerDe	 
+InputFormat:        	com.ibm.spss.hive.serde2.xml.XmlInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	column.xpath.pdbid  	/*[local-name()='datablock']/@datablockName
+	column.xpath.record 	/*[local-name()='datablock']/*[local-name()='category_atom_record']/*[local-name()='atom_record']/text()
+	serialization.format	1              
+	
+	
+	
+hive> describe formatted splitpdb;        
+OK
+# col_name            	data_type           	comment             
+	 	 
+pdbid               	string              	None                
+record              	array<string>       	None                
+	 	 
+# Detailed Table Information	 	 
+Database:           	pdb_sample          	 
+Owner:              	zslf023             	 
+CreateTime:         	Sun Jul 06 14:57:09 BST 2014	 
+LastAccessTime:     	UNKNOWN             	 
+Protect Mode:       	None                	 
+Retention:          	0                   	 
+Table Type:         	VIRTUAL_VIEW        	 
+Table Parameters:	 	 
+	transient_lastDdlTime	1404655029          
+	 	 
+# Storage Information	 	 
+SerDe Library:      	null                	 
+InputFormat:        	org.apache.hadoop.mapred.SequenceFileInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+	 	 
+# View Information	 	 
+View Original Text: 	SELECT split(pdbid,"-")[0] as pdbid, split(entry,"\\p{Zs}+") as record	 
+FROM pdb_xml_load LATERAL VIEW explode(record) splitTable AS entry	 	 
+View Expanded Text: 	SELECT split(`pdb_xml_load`.`pdbid`,"-")[0] as `pdbid`, split(`splittable`.`entry`,"\\p{Zs}+") as `record`	 
+FROM `pdb_sample`.`pdb_xml_load` LATERAL VIEW explode(`pdb_xml_load`.`record`) `splitTable` AS `entry`	 	 
+	
+	
+	
+	
+hive> describe formatted atom_coordinates;
+OK
+# col_name            	data_type           	comment             
+	 	 
+pdbid               	string              	None                
+pdbx_pdb_model_num  	int                 	None                
+group_pdb           	string              	None                
+label_atom_id       	string              	None                
+label_comp_id       	string              	None                
+label_asym_id       	string              	None                
+label_seq_id        	int                 	None                
+cartnx              	double              	None                
+cartny              	double              	None                
+cartnz              	double              	None                
+	 	 
+# Detailed Table Information	 	 
+Database:           	pdb_sample          	 
+Owner:              	zslf023             	 
+CreateTime:         	Wed Jul 09 14:04:17 BST 2014	 
+LastAccessTime:     	UNKNOWN             	 
+Protect Mode:       	None                	 
+Retention:          	0                   	 
+Location:           	hdfs://bigdata:8020/user/hive/warehouse/pdb_sample.db/atom_coordinates	 
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	numFiles            	91                  
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	21612502            
+	transient_lastDdlTime	1404911058          
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1             

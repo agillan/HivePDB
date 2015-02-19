@@ -1,0 +1,33 @@
+4MZJ	1	B	1	ACE	{"C":[13.31,11.754,26.53]}
+4MZK	1	B	1	ACE	{"C":[14.922,11.413,27.723]}
+4MZM	1	B	13	ASP	{"C":[28.029,2.839,-27.279],"CA":[29.149,2.094,-28.011]}
+4MZP	1	E	76	LYS	{"N":[-32.834,63.628,24.226]}
+
+
+4MZJ	1	B	1	ACE	C	13.31	11.754	26.53
+4MZJ	1	B	1	ACE	O	14.311	11.402	27.133
+4MZJ	1	B	1	ACE	CH3	13.419	12.665	25.331
+
+-- doesn't work because atoms not in group by
+CREATE TABLE coordinates_grouped_correct AS
+SELECT pdbid, pdbx_PDB_model_num, label_asym_id,label_seq_id, label_comp_id, collect(label_atom_id,ARRAY(cartnx,cartny,cartnz)) as atoms
+FROM coordinates
+WHERE label_atom_id in ("N","CA","C")
+GROUP BY pdbid, pdbx_PDB_model_num, label_asym_id,label_seq_id,label_comp_id
+HAVING size(atoms) = 3;
+
+--create a view with error_ids
+create view noAtoms as
+select distinct pdbid as errorid from coordinates_grouped where size(atoms) != 3;
+
+--modify transform query to exclude errorids
+SELECT TRANSFORM(t1.pdbid, t1.pdbx_PDB_model_num, t1.label_asym_id,t1.label_seq_id, t1.label_comp_id, t1.atoms)
+USING "python experiment2.py" as (id, result)
+FROM
+(SELECT * from coordinates_grouped 
+LEFT OUTER JOIN noatoms 
+ON (coordinates_grouped.pdbid = noatoms.errorid) 
+WHERE noatoms.errorid IS NULL) t1;
+
+
+find . -type f -name '*-extatom.xml.gz' -exec echo {} \; -exec hadoop fs -copyFromLocal {} /user/zslf023/pdbxml \;

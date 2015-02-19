@@ -1,0 +1,75 @@
+use pdb;
+
+SELECT pdbid,label_comp_id,label_atom_id, array(cartnx,cartny,cartnz)
+FROM coordinates
+WHERE label_atom_id in("N","CA","C");
+
+
+
+
+--with brickhouse collect function
+SELECT pdbid,label_asym_id,label_seq_id, label_comp_id,collect(label_atom_id,array(cartnx,cartny,cartnz))
+FROM coordinates
+GROUP BY pdbid, label_asym_id,label_seq_id,label_comp_id;
+
+
+
+
+
+--trying to filter to certain atom types
+SELECT pdbid,label_asym_id,label_seq_id, label_comp_id, collect(label_atom_id,array(cartnx,cartny,cartnz))
+FROM coordinates
+WHERE label_atom_id in ("N","CA","C")
+GROUP BY pdbid, label_asym_id,label_seq_id,label_comp_id;
+
+0 	11AS 	A 	4 	ALA 	{"C":[13.388,38.646,27.027],"CA":[12.364,38.679,28.168],"N":[11.746,37.328,28.3]}
+1 	11AS 	A 	5 	TYR 	{"C":[16.675,39.0,27.006],"CA":[15.49,39.455,26.171],"N":[14.341,39.569,27.044]}
+2 	11AS 	A 	6 	ILE 	{"C":[17.534,37.678,29.782],"CA":[17.768,39.051,29.165],"N":[16.691,39.411,28.267]}
+3 	11AS 	A 	7 	ALA 	{"C":[16.334,34.978,29.449],"CA":[15.926,36.009,30.508],"N":[16.271,37.352,30.061]}
+4 	11AS 	A 	8 	LYS 	{"C":[17.719,34.246,26.888],"CA":[16.215,34.401,27.06],"N":[15.864,35.204,28.225]}
+5 	11AS 	A 	9 	GLN 	{"C":[20.646,34.534,27.985],"CA":[19.896,35.326,26.916],"N":[18.453,35.334,27.088]}
+6 	11AS 	A 	10 	ARG 	{"C":[20.385,32.43,30.331],"CA":[20.824,33.889,30.329],"N":[20.162,34.581,29.227]}
+7 	11AS 	A 	11 	GLN 	{"C":[19.71,30.066,28.205],"CA":[18.941,30.747,29.313],"N":[19.411,32.112,29.482]}
+8 	11AS 	A 	12 	ILE 	{"C":[22.053,29.79,26.45],"CA":[20.674,30.242,25.973],"N":[19.895,30.77,27.092]}
+9 	11AS 	A 	13 	SER 	{"C":[24.159,29.204,28.712],"CA":[24.03,30.379,27.761],"N":[22.667,30.604,27.303]}
+10 	11AS 	A 	14 	PHE 	{"C":[23.036,26.588,29.719],"CA":[23.13,27.905,30.501],"N":[23.195,29.056,29.613]}
+
+
+
+--attempt above with transform
+use pdb;
+
+SELECT TRANSFORM(pdbid,label_asym_id,label_seq_id, label_comp_id, collect(label_atom_id,array(cartnx,cartny,cartnz)))
+USING "python experiment2.py" as (pdbid, narray)
+FROM coordinates
+WHERE label_atom_id in ("N","CA","C")
+GROUP BY pdbid, label_asym_id,label_seq_id,label_comp_id;
+--doesn't work
+
+
+FROM(
+SELECT pdbid,label_asym_id,label_seq_id, label_comp_id, collect(label_atom_id,array(cartnx,cartny,cartnz)) as atoms
+FROM coordinates
+WHERE label_atom_id in ("N","CA","C")
+GROUP BY pdbid, label_asym_id,label_seq_id,label_comp_id) as t1
+SELECT TRANSFORM(pdbid,label_asym_id,label_seq_id, label_comp_id, atoms)
+USING "python experiment2.py" as (id, atoms);
+
+
+--try with view 
+CREATE VIEW t1 as
+SELECT pdbid,label_asym_id,label_seq_id, label_comp_id, collect(label_atom_id,array(cartnx,cartny,cartnz)) as atoms
+FROM coordinates
+WHERE label_atom_id in ("N","CA","C")
+GROUP BY pdbid, label_asym_id,label_seq_id,label_comp_id;
+
+
+SELECT TRANSFORM(*)
+USING "python experiment2.py" as (id, atms)
+FROM coordinates_grouped;
+
+
+SELECT TRANSFORM(*)                                
+USING "python experiment2.py" as (id, result)      
+FROM coordinates_grouped                           
+CLUSTER BY id;
